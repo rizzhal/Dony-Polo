@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { IMG } from '@/lib/static';
 
-const links = [['/', 'Home'], ['/about', 'About'], ['/admission', 'Admission'], ['/facilities', 'Facilities'], ['/gallery', 'Gallery'], ['/cbse-information', 'CBSE information'], ['/contact', 'Contact']];
+const links = [['/', 'Home'], ['/about', 'About'], ['/admission', 'Admission'], ['/facilities', 'Facilities'], ['/gallery', 'Gallery'], ['/cbse-information', 'CBSE Information'], ['/contact', 'Contact']];
 
 export default function Navbar({ name }) {
   const path = usePathname();
