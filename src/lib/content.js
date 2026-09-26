@@ -43,7 +43,17 @@ export async function getGalleries(page = 1, limit = 6, { signStorageUrls = fals
 export async function getDocuments({ signStorageUrls = false } = {}) {
   await seedDynamicContent();
   const documents = await CbseDocument.find().sort({ createdAt: -1 }).lean();
-  return Promise.all(documents.map(async (document) => ({
+  const normalizedTitle = (title) => title.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const titlesWithDescriptions = new Set(
+    documents
+      .filter((document) => document.description?.trim())
+      .map((document) => normalizedTitle(document.title)),
+  );
+  const visibleDocuments = documents.filter((document) => (
+    document.description?.trim() || !titlesWithDescriptions.has(normalizedTitle(document.title))
+  ));
+
+  return Promise.all(visibleDocuments.map(async (document) => ({
     ...document,
     _id: String(document._id),
     url: signStorageUrls && document.fileName.startsWith('cbse/')
