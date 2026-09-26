@@ -40,8 +40,14 @@ export async function getGalleries(page = 1, limit = 6, { signStorageUrls = fals
   return { items: galleries, page: safePage, limit: safeLimit, total, pages: Math.max(1, Math.ceil(total / safeLimit)) };
 }
 
-export async function getDocuments() {
+export async function getDocuments({ signStorageUrls = false } = {}) {
   await seedDynamicContent();
   const documents = await CbseDocument.find().sort({ createdAt: -1 }).lean();
-  return documents.map((document) => ({ ...document, _id: String(document._id) }));
+  return Promise.all(documents.map(async (document) => ({
+    ...document,
+    _id: String(document._id),
+    url: signStorageUrls && document.fileName.startsWith('cbse/')
+      ? await createSignedUrl(document.fileName, 86400)
+      : document.url,
+  })));
 }

@@ -5,6 +5,6 @@ export const metadata = { title: 'Admin dashboard', robots: { index: false, foll
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  const [galleries, documents] = await Promise.all([getGalleries(1, 1000), getDocuments()]);
+  const [galleries, documents] = await Promise.all([getGalleries(1, 1000), getDocuments({ signStorageUrls: true })]);
   return <Dashboard initial={{ galleries: galleries.items, documents }} />;
 }

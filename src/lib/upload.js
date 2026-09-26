@@ -37,9 +37,22 @@ export async function saveImage(file) {
   return { originalName: safeOriginalName(file.name), fileName, url, mimeType: file.type || 'application/octet-stream' };
 }
 
+export async function savePdf(file) {
+  if (!file || typeof file.arrayBuffer !== 'function') throw new Error('A PDF is required.');
+  const fileName = `cbse/${storedFileName(file.name)}`;
+  const { url } = await uploadToStorage(fileName, Buffer.from(await file.arrayBuffer()), file.type || 'application/pdf');
+  return { originalName: safeOriginalName(file.name), fileName, url, mimeType: file.type || 'application/pdf' };
+}
+
 export async function deleteFile(fileName) {
   if (!fileName) return;
   try { await fs.unlink(path.join(UPLOAD_DIR, path.basename(fileName))); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+}
+
+export async function deleteDocumentFile(fileName) {
+  if (!fileName) return;
+  if (fileName.startsWith('cbse/')) return deleteFromStorage(fileName);
+  return deleteFile(fileName);
 }
 
 export async function deleteImage(fileName) {

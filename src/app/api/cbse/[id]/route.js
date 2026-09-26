@@ -2,13 +2,15 @@ import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/auth';
 import connectDb from '@/lib/mongodb';
 import { CbseDocument } from '@/lib/models';
-import { deleteFile, saveFile, validatePdf } from '@/lib/upload';
+import { createSignedUrl } from '@/config/supabase';
+import { deleteDocumentFile, savePdf, validatePdf } from '@/lib/upload';
 
 export const runtime = 'nodejs';
 
 export async function PUT(request, { params }) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   let saved;
+  let signedUrl;
   try {
     const { id } = await params;
     await connectDb();
@@ -23,15 +25,21 @@ export async function PUT(request, { params }) {
     document.description = description;
     if (file && file.size > 0) {
       if (!validatePdf(file)) return NextResponse.json({ error: 'Upload a PDF up to 25 MB.' }, { status: 400 });
-      saved = await saveFile(file);
+      saved = await savePdf(file);
+      signedUrl = await createSignedUrl(saved.fileName, 86400);
       const previous = document.fileName;
       Object.assign(document, saved);
       await document.save();
-      await deleteFile(previous);
-    } else await document.save();
-    return NextResponse.json(document);
+      try { await deleteDocumentFile(previous); } catch (error) { console.error('Error deleting replaced CBSE document', error); }
+    } else {
+      if (document.fileName.startsWith('cbse/')) signedUrl = await createSignedUrl(document.fileName, 86400);
+      await document.save();
+    }
+    const response = document.toObject();
+    if (signedUrl) response.url = signedUrl;
+    return NextResponse.json(response);
   } catch (error) {
-    if (saved) await deleteFile(saved.fileName);
+    if (saved) await deleteDocumentFile(saved.fileName);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -43,7 +51,7 @@ export async function DELETE(request, { params }) {
     await connectDb();
     const document = await CbseDocument.findByIdAndDelete(id);
     if (!document) return NextResponse.json({ error: 'Document not found.' }, { status: 404 });
-    await deleteFile(document.fileName);
+    await deleteDocumentFile(document.fileName);
     return NextResponse.json({ ok: true });
   } catch (error) { return NextResponse.json({ error: error.message }, { status: 500 }); }
 }

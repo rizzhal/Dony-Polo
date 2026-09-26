@@ -5,7 +5,7 @@ import { getDocuments } from '@/lib/content';
 export const metadata = { title: 'CBSE information' };
 
 export default async function Cbse() {
-  const documents = await getDocuments();
+  const documents = await getDocuments({ signStorageUrls: true });
   return (
     <>
       <PageHeader title="CBSE information" />
