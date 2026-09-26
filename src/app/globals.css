@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes orbit { to { transform: rotate(360deg); } }
+.orbit { animation: orbit 40s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .orbit { animation: none; } html { scroll-behavior: auto; } }
+:focus-visible { outline: 3px solid #F2A900; outline-offset: 2px; }
+html { scroll-behavior: smooth; }
